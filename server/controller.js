@@ -29,7 +29,9 @@ module.exports = {
     approveAppointment: (req, res) => {
         let {apptId} = req.body
     
-        sequelize.query(`*****YOUR CODE HERE*****
+        sequelize.query(`UPDATE cc_appointments
+                        SET approved = true
+                        WHERE appt_id = ${apptId};
         
         insert into cc_emp_appts (emp_id, appt_id)
         values (${nextEmp}, ${apptId}),
@@ -52,5 +54,35 @@ module.exports = {
         .catch((error) => {
             console.log(error);
         })
+    },
+
+    getPendingAppointments: (req, res) => {
+        sequelize.query(`SELECT * FROM cc_appointments
+                        WHERE approved = false
+                        ORDER BY date DESC;`)
+                        
+        .then((dbResult) => {
+            res.status(200).send(dbResult[0]);
+        })
+        .catch((error) => {
+            console.log(error);
+        })
+    },
+
+    getPastAppointments: (req, res) => {
+        sequelize.query(`SELECT apps.appt_id, apps.date, apps.service_type, apps.notes 
+                        FROM cc_appointments AS apps
+                        JOIN cc_emp_appts AS empApp ON apps.appt_id = empApp.appt_id
+                        JOIN cc_employees AS emps ON empApp.emp_id = emps.emp_id
+                        JOIN cc_users AS users ON emps.user_id = users.user_id
+                        WHERE apps.approved = true AND apps.completed = true
+                        ORDER BY apps.date DESC;`)
+        .then((dbResult) => {
+            res.status(200).send(dbResult[0]);
+        })
+        .catch((error) => {
+            console.log(error);
+        })
     }
 }
+
